@@ -1,4 +1,4 @@
-# Shiru schedule data mirror
+# Schedule data mirror
 
 This repository serves the public anime schedule JSON feeds. The feed data is mirrored from [RockinChaos/AniSchedule](https://github.com/RockinChaos/AniSchedule), which is licensed under GPL-3.0. The upstream project and its contributors remain the source of the data; this repository is a hosting mirror, not a claim of original authorship.
 
