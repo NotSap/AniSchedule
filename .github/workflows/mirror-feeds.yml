@@ -1,0 +1,52 @@
+name: Mirror anime schedule feeds
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mirror-anime-schedule-feeds
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out mirror
+        uses: actions/checkout@v6
+
+      - name: Refresh public JSON feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            dub-episode-feed.json
+            dub-schedule.json
+            hentai-episode-feed.json
+            last-updated.json
+            sub-episode-feed.json
+            sub-schedule.json
+          )
+          for file in "${files[@]}"; do
+            temp_file="$(mktemp)"
+            curl --fail --show-error --silent --location --retry 3 \
+              "https://raw.githubusercontent.com/RockinChaos/AniSchedule/master/raw/${file}" \
+              --output "$temp_file"
+            jq -e . "$temp_file" >/dev/null
+            install -D "$temp_file" "raw/${file}"
+            rm "$temp_file"
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- raw; then
+            git add raw/*.json
+            git commit -m "chore: refresh mirrored schedule feeds"
+          else
+            echo "No upstream feed changes."
+          fi
